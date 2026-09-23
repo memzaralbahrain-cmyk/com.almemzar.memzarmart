@@ -14,7 +14,7 @@ workflows:
         bundle_identifier: com.almemzar.memzarmart
       vars:
         # your website repo (public) that contains index.html, products.txt and all photos
-        SITE_REPO_URL: "SITE_REPO_URL: "https://github.com/memzaralbahrain-cmyk/memzar-ios.git""
+        SITE_REPO_URL: "https://github.com/memzaralbahrain-cmyk/memzar-ios.git"
     scripts:
       - name: Prepare icon and splash
         script: |
