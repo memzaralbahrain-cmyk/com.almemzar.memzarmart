@@ -1,0 +1,61 @@
+workflows:
+  ios-testflight:
+    name: Memzar Mart iOS (TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Memzar ASC Key      # same name you give the API key in Codemagic
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.almemzar.memzarmart
+      vars:
+        # your website repo (public) that contains index.html, products.txt and all photos
+        SITE_REPO_URL: "https://github.com/REPLACE-USERNAME/REPLACE-SITE-REPO.git"
+    scripts:
+      - name: Prepare icon and splash
+        script: |
+          mkdir -p resources
+          cp icon-only.png splash.png splash-dark.png resources/
+      - name: Get latest website files
+        script: |
+          rm -rf www
+          git clone --depth 1 "$SITE_REPO_URL" www
+          rm -rf www/.git
+          test -f www/index.html
+      - name: Install packages
+        script: npm install
+      - name: Create iOS project
+        script: |
+          npx cap add ios
+      - name: Generate app icon and splash
+        script: npx capacitor-assets generate --ios
+      - name: Copy website into iOS app
+        script: npx cap sync ios
+      - name: App settings (version, encryption flag)
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.0" $PLIST
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST || true
+      - name: Apply signing
+        script: |
+          if [ -d ios/App/App.xcodeproj ]; then
+            xcode-project use-profiles --project ios/App/App.xcodeproj
+          fi
+      - name: Build IPA
+        script: |
+          if [ -d ios/App/App.xcworkspace ]; then
+            xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+          else
+            xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
+          fi
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
