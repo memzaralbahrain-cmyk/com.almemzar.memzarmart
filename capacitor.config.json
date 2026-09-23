@@ -1,0 +1,10 @@
+{
+  "appId": "com.almemzar.memzarmart",
+  "appName": "Memzar Mart",
+  "webDir": "www",
+  "backgroundColor": "#fdf3f0",
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}
